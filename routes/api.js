@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const settings = require('../config/settings');
 const controller = require('../controllers/Apicontroller');
+const users = require('../database/schemas/users');
 
 router.get('/', function(req, res, next) {
     res.send(`This is response for ${req.url}`);
@@ -15,6 +16,60 @@ router.get('/', function(req, res, next) {
         const conent = req.conent || '';
         res.send(conent);
     });*/
+
+router.get('/findUserById/:userId', (req, res) => {
+    const userId = req.params.userId;
+    /*users.findById(userId, (err, data)=> {
+        if(err) throw new Error(err);
+        res.json(data);
+    })*/
+
+    users.findOne({"_id": userId}, {isActive: 0, _id: 0, __v: 0}, (err, data) => {
+        if(err) throw new Error(err);
+        res.json(data);
+    })
+});
+
+router.delete('/deleteUserById/:userId', (req, res) => {
+    const userId = req.params.userId;
+    users.findByIdAndDelete(userId, (err, data) => {
+        if(err) throw new Error(err);
+        res.json(data);
+    })
+});
+
+router.put('/findAndUpdateUser/:userId/:username?', (req, res) => {
+    const userId = req.params.userId;
+    const username = req.params.username || '';
+    const body = req.body;
+    if(body.hasOwnProperty('isActive')){
+        const updateObj = {
+            isActive: body.isActive
+        };
+        const match = {};
+        if(username) {
+            match['username'] = username;
+        } else {
+            match["_id"] = userId;
+        }
+        /*users.findOneAndUpdate(match, {"$set": updateObj}, (err, data) => {
+            if(err) throw new Error(err);
+            res.json(data);
+        })*/
+        users.findOneAndUpdate(match, updateObj, {new:true}, (err, data) => {
+            if(err) throw new Error(err);
+            res.json(data);
+        })
+    }
+})
+
+router.get('/findUsersByAge', (req, res) => {
+    // https://docs.mongodb.com/manual/reference/operator/query/in/
+    users.find({age: {"$exists": true,"$gt": 20}}, (err, data) => {
+        if(err) throw new Error(err);
+        res.json(data);
+    });
+})
 
 router.route('/users/:userId?')
     .get((req, res, next) => {

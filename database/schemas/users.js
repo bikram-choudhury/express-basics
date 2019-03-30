@@ -24,5 +24,10 @@ const user_schmea = mongoose.Schema({
     }
 });
 
+/*{
+    type: mongoose.Types.ObjectId,
+    required: false
+}*/
+
 module.exports = mongoose.model('users', user_schmea);
 

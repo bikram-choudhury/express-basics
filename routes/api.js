@@ -4,6 +4,9 @@ const settings = require('../config/settings');
 const controller = require('../controllers/Apicontroller');
 const users = require('../database/schemas/users');
 
+const mongoose = require('mongoose');
+const ObjectId = mongoose.Types.ObjectId;
+
 router.get('/', function(req, res, next) {
     res.send(`This is response for ${req.url}`);
 });
@@ -19,23 +22,32 @@ router.get('/', function(req, res, next) {
 
 router.get('/findUserById/:userId', (req, res) => {
     const userId = req.params.userId;
-    /*users.findById(userId, (err, data)=> {
+    /*users.findById(userId, {age: 1, isActive:1, _id:0}, (error, user) => {
+        if(error) throw new Error(error);
+        res.json(user);
+    });*/
+    users.findOne({"_id": ObjectId(userId)}, {isActive: 0, _id: 0, __v: 0}, (err, data) => {
         if(err) throw new Error(err);
         res.json(data);
-    })*/
-
-    users.findOne({"_id": userId}, {isActive: 0, _id: 0, __v: 0}, (err, data) => {
-        if(err) throw new Error(err);
-        res.json(data);
-    })
+    });
 });
 
 router.delete('/deleteUserById/:userId', (req, res) => {
     const userId = req.params.userId;
-    users.findByIdAndDelete(userId, (err, data) => {
+    /*users.findByIdAndDelete(userId, (err, data) => {
         if(err) throw new Error(err);
         res.json(data);
-    })
+    });*/
+    users.findOne({"_id": ObjectId(userId)}, {isActive: 0, __v: 0}, (err, data) => {
+        if(err) throw new Error(err);
+        if(data && data._id) {
+            users.remove({_id: ObjectId(userId)}, (error, result)=> {
+                res.json(data);
+            })
+        } else {
+            res.json(err);
+        }
+    });
 });
 
 router.put('/findAndUpdateUser/:userId/:username?', (req, res) => {
@@ -65,7 +77,12 @@ router.put('/findAndUpdateUser/:userId/:username?', (req, res) => {
 
 router.get('/findUsersByAge', (req, res) => {
     // https://docs.mongodb.com/manual/reference/operator/query/in/
-    users.find({age: {"$exists": true,"$gt": 20}}, (err, data) => {
+    /*users.find({age: {"$exists": true,"$gt": 20}}, (err, data) => {
+        if(err) throw new Error(err);
+        res.json(data);
+    });*/
+
+    users.find({age: {"$exists": true,"$in": [15, 20, 50]}}, (err, data) => {
         if(err) throw new Error(err);
         res.json(data);
     });

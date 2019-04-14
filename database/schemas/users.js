@@ -21,6 +21,10 @@ const user_schmea = mongoose.Schema({
         type: Boolean,
         required: false,
         default: true
+    },
+    optionalParam: {
+        type: String,
+        required: false
     }
 });
 
